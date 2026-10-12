@@ -1,0 +1,13 @@
+(vl-load-com)
+(setvar "CMDECHO" 0)
+; --- 1) remove the earlier Claude test objects (text, circle r=4 at 50,10, rectangle 45,5-55,15) ---
+(defun ab:del-if (filter test / ss i e) (if (setq ss (ssget "_X" filter)) (progn (setq i 0) (repeat (sslength ss) (setq e (ssname ss i) i (1+ i)) (if (test e) (entdel e))))))
+(defun ab:pts (e) (mapcar (quote cdr) (vl-remove-if-not (quote (lambda (x) (= (car x) 10))) (entget e))))
+(ab:del-if (quote ((0 . "TEXT") (1 . "Claude test OK"))) (lambda (e) T))
+(ab:del-if (quote ((0 . "CIRCLE") (40 . 4.0))) (lambda (e) (equal (cdr (assoc 10 (entget e))) (quote (50.0 10.0 0.0)) 1e-6)))
+(ab:del-if (quote ((0 . "LWPOLYLINE") (90 . 4))) (lambda (e) (vl-every (quote (lambda (p) (and (or (equal (car p) 45.0 1e-6) (equal (car p) 55.0 1e-6)) (or (equal (cadr p) 5.0 1e-6) (equal (cadr p) 15.0 1e-6))))) (ab:pts e))))
+; --- 2) draw a 20 x 20 rectangle from 0,0 to 20,20 ---
+(command "_.RECTANG" "_non" (list 0.0 0.0) "_non" (list 20.0 20.0))
+(command "_.ZOOM" "_E")
+(setvar "CMDECHO" 1)
+(princ "\nautocad-bot: done.")
